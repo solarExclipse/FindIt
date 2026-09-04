@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FindIt tests</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .test-panel {
+        max-width: none;
+        margin: 2.5rem auto;
+        padding: 0 1.5rem 3rem;
+      }
+
+      .test-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: end;
+        margin-bottom: 1.25rem;
+      }
+
+      .test-controls label {
+        display: grid;
+        gap: 0.35rem;
+        font-size: 0.88rem;
+        color: #6f6f6b;
+      }
+
+      .test-controls select {
+        min-width: 12rem;
+        min-height: 2.5rem;
+        padding: 0.55rem 0.75rem;
+        font-size: 0.95rem;
+        border-radius: 8px;
+        border: 1px solid #e6e6e2;
+        background: #fff;
+      }
+
+      #results {
+        white-space: pre-wrap;
+        background: #fff;
+        border: 1px solid #e6e6e2;
+        border-radius: 10px;
+        padding: 1.1rem;
+        min-height: 12rem;
+        font-size: 0.95rem;
+      }
+
+      .pass {
+        color: #1f4d38;
+      }
+
+      .fail {
+        color: #9b2c2c;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <div>
+            <p class="brand-kicker">Required public tests</p>
+            <h1 class="brand-title">FindIt tests</h1>
+          </div>
+        </div>
+        <a href="index.html" class="header-link">Back to app</a>
+      </div>
+    </header>
+
+    <main class="test-panel">
+      <div class="test-controls">
+        <label>
+          Current ticket
+          <select id="ticket">
+            <option value="1">Ticket 1</option>
+            <option value="2">Ticket 2</option>
+            <option value="3">Ticket 3</option>
+            <option value="4">Ticket 4</option>
+          </select>
+        </label>
+        <button type="button" id="run-tests" class="primary-button">Run Tests</button>
+      </div>
+      <pre id="results">Choose a ticket and click Run Tests.</pre>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+      (function () {
+        var results = document.getElementById("results");
+        var laterTickets = {
+          3: [
+            "A staff decision without a reason is blocked",
+            "Two claims cannot both be approved for one item",
+            "Approving a claim changes the item to RESERVED"
+          ],
+          4: ["Ticket 4 tests are released with the sealed change request"]
+        };
+
+        function assert(condition, message) {
+          if (!condition) {
+            throw new Error(message);
+          }
+        }
+
+        function runTicket1() {
+          var lines = [];
+          var passed = 0;
+          var failed = 0;
+
+          function test(name, fn) {
+            FindIt.reset();
+            try {
+              fn();
+              passed += 1;
+              lines.push("PASS  " + name);
+            } catch (error) {
+              failed += 1;
+              lines.push("FAIL  " + name + " — " + error.message);
+            }
+          }
+
+          test("Draft items are not public", function () {
+            var allItems = FindIt.getItems();
+            var draft = null;
+            for (var i = 0; i < allItems.length; i += 1) {
+              if (allItems[i].status === "DRAFT") {
+                draft = allItems[i];
+                break;
+              }
+            }
+            assert(draft, "Seed data should include a DRAFT item.");
+            var publicItems = FindIt.getPublicItems();
+            for (var j = 0; j < publicItems.length; j += 1) {
+              assert(
+                publicItems[j].status !== "DRAFT",
+                "A DRAFT item appeared on the public list."
+              );
+              assert(
+                publicItems[j].id !== draft.id,
+                "The DRAFT item was visible to visitors."
+              );
+            }
+            assert(
+              FindIt.getItem(draft.id, { role: "visitor" }) === null,
+              "Visitors should not receive DRAFT item details."
+            );
+          });
+
+          test("Visitors cannot see privateClue", function () {
+            var publicItems = FindIt.getPublicItems();
+            assert(publicItems.length > 0, "Seed data should include a PUBLISHED item.");
+            var publicItem = publicItems[0];
+            assert(
+              !Object.prototype.hasOwnProperty.call(publicItem, "privateClue"),
+              "getPublicItems() exposed privateClue."
+            );
+
+            var visitorItem = FindIt.getItem(publicItem.id, { role: "visitor" });
+            var staffItem = FindIt.getItem(publicItem.id, { role: "staff" });
+            assert(visitorItem, "Visitor details should load for a PUBLISHED item.");
+            assert(staffItem && staffItem.privateClue, "Staff should still see privateClue.");
+            assert(
+              !Object.prototype.hasOwnProperty.call(visitorItem, "privateClue"),
+              "Visitor details included a privateClue field."
+            );
+            assert(
+              JSON.stringify(visitorItem).indexOf(staffItem.privateClue) === -1,
+              "Visitor details included the private clue text."
+            );
+          });
+
+          lines.unshift(
+            failed === 0
+              ? "Ticket 1: all " + passed + " tests passed."
+              : "Ticket 1: " + passed + " passed, " + failed + " failed."
+          );
+          return lines.join("\n");
+        }
+
+        function findByStatus(records, status) {
+          for (var i = 0; i < records.length; i += 1) {
+            if (records[i].status === status) {
+              return records[i];
+            }
+          }
+          return null;
+        }
+
+        function runTicket2() {
+          var lines = [];
+          var passed = 0;
+          var failed = 0;
+
+          function test(name, fn) {
+            FindIt.reset();
+            try {
+              fn();
+              passed += 1;
+              lines.push("PASS  " + name);
+            } catch (error) {
+              failed += 1;
+              lines.push("FAIL  " + name + " — " + error.message);
+            }
+          }
+
+          test("A new claim is connected to the correct itemId", function () {
+            var published = FindIt.getPublicItems()[0];
+            assert(published, "Seed data should include a PUBLISHED item.");
+            var result = FindIt.createClaim({
+              itemId: published.id,
+              claimantName: "Alex Chen",
+              contact: "alex@campus.test",
+              evidence: "The ID photo shows a red beanie."
+            });
+            assert(result.ok, result.error || "Claim should be saved.");
+            assert(result.claim.status === "SUBMITTED", "New claims must start as SUBMITTED.");
+            assert(result.claim.itemId === published.id, "The claim was not linked to the item.");
+          });
+
+          test("Claims cannot be submitted for unavailable items", function () {
+            var allItems = FindIt.getItems();
+            var draft = findByStatus(allItems, "DRAFT");
+            var reserved = findByStatus(allItems, "RESERVED");
+            var published = FindIt.getPublicItems()[0];
+            assert(draft && reserved && published, "Seed data should include DRAFT, RESERVED and PUBLISHED items.");
+
+            var draftClaim = FindIt.createClaim({
+              itemId: draft.id,
+              claimantName: "Alex Chen",
+              contact: "alex@campus.test",
+              evidence: "I own this hoodie."
+            });
+            assert(!draftClaim.ok, "DRAFT items must not receive claims.");
+
+            var reservedClaim = FindIt.createClaim({
+              itemId: reserved.id,
+              claimantName: "Alex Chen",
+              contact: "alex@campus.test",
+              evidence: "These are my keys."
+            });
+            assert(!reservedClaim.ok, "RESERVED items must not receive claims.");
+
+            var visitorClaims = FindIt.getClaims({ role: "visitor" });
+            assert(visitorClaims.length === 0, "Blocked claims should not be saved.");
+          });
+
+          test("Returned items cannot receive new claims", function () {
+            var returned = findByStatus(FindIt.getItems(), "RETURNED");
+            assert(returned, "Seed data should include a RETURNED item.");
+            var result = FindIt.createClaim({
+              itemId: returned.id,
+              claimantName: "Alex Chen",
+              contact: "alex@campus.test",
+              evidence: "This is my umbrella."
+            });
+            assert(!result.ok, "RETURNED items must not receive claims.");
+          });
+
+          test("Visitors cannot see claim evidence", function () {
+            var published = FindIt.getPublicItems()[0];
+            var secret = "UNIQUE_EVIDENCE_TOKEN_XYZ";
+            var created = FindIt.createClaim({
+              itemId: published.id,
+              claimantName: "Alex Chen",
+              contact: "alex@campus.test",
+              evidence: secret
+            });
+            assert(created.ok, created.error || "Claim should be saved.");
+
+            var visitorClaims = FindIt.getClaims({ role: "visitor" });
+            assert(visitorClaims.length === 1, "The submitted claim should exist.");
+            assert(
+              !Object.prototype.hasOwnProperty.call(visitorClaims[0], "evidence"),
+              "Visitor claims included an evidence field."
+            );
+            assert(
+              JSON.stringify(visitorClaims).indexOf(secret) === -1,
+              "Visitor claims included the evidence text."
+            );
+
+            var visitorItem = FindIt.getItem(published.id, { role: "visitor" });
+            assert(
+              JSON.stringify(visitorItem).indexOf(secret) === -1,
+              "Visitor item details included claim evidence."
+            );
+          });
+
+          lines.unshift(
+            failed === 0
+              ? "Ticket 2: all " + passed + " tests passed."
+              : "Ticket 2: " + passed + " passed, " + failed + " failed."
+          );
+          return lines.join("\n");
+        }
+
+        document.getElementById("run-tests").addEventListener("click", function () {
+          var ticket = document.getElementById("ticket").value;
+          if (ticket === "1") {
+            results.textContent = runTicket1();
+            results.className = results.textContent.indexOf("FAIL") === -1 ? "pass" : "fail";
+            return;
+          }
+          if (ticket === "2") {
+            results.textContent = runTicket1() + "\n\n" + runTicket2();
+            results.className = results.textContent.indexOf("FAIL") === -1 ? "pass" : "fail";
+            return;
+          }
+
+          var names = laterTickets[ticket] || [];
+          results.className = "";
+          results.textContent =
+            "Ticket " +
+            ticket +
+            " is not part of this checkpoint.\nComplete Ticket 2 before implementing later tickets.\n\nNot run:\n- " +
+            names.join("\n- ");
+        });
+      })();
+    </script>
+  </body>
+</html>

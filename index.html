@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FindIt — Campus Lost and Found</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="site-header">
+        <div class="header-inner">
+          <div class="header-start">
+            <div class="brand">
+              <span class="brand-mark" aria-hidden="true"></span>
+              <div>
+                <p class="brand-kicker">Campus lost and found</p>
+                <h1 class="brand-title">FindIt</h1>
+              </div>
+            </div>
+            <div class="role-switch">
+              <span class="role-label" id="role-label">Role</span>
+              <div class="role-dropdown" id="role-dropdown">
+                <button
+                  type="button"
+                  id="role-toggle"
+                  class="role-toggle"
+                  aria-haspopup="listbox"
+                  aria-expanded="false"
+                  aria-labelledby="role-label role-current"
+                >
+                  <span id="role-current">Visitor</span>
+                  <span class="role-chevron" aria-hidden="true"></span>
+                </button>
+                <div class="role-menu" id="role-menu" role="listbox" aria-labelledby="role-label" hidden>
+                  <button type="button" class="role-option is-selected" role="option" data-role="visitor" aria-selected="true">
+                    Visitor
+                  </button>
+                  <button type="button" class="role-option" role="option" data-role="staff" aria-selected="false">
+                    Staff
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <nav class="main-nav" aria-label="Main">
+            <button type="button" id="nav-list">Browse items</button>
+            <button type="button" id="nav-my-claims">My claims</button>
+            <button type="button" id="nav-report" hidden>Report found item</button>
+            <button type="button" id="nav-review" hidden>Review claims</button>
+            <button type="button" id="nav-log" hidden>Activity log</button>
+            <button type="button" id="nav-archive" hidden>Archive</button>
+          </nav>
+        </div>
+      </header>
+
+      <main class="page">
+        <p id="banner" class="banner" hidden></p>
+
+        <section id="view-list">
+          <div class="section-heading">
+            <h2 id="list-heading">Found items</h2>
+            <p id="list-intro" class="lede"></p>
+          </div>
+          <p id="list-empty" class="empty-message" hidden></p>
+          <div id="item-list" class="item-grid"></div>
+        </section>
+
+        <section id="view-details" hidden>
+          <button type="button" id="back-to-list" class="text-button">Back to list</button>
+          <article id="item-details" class="details-card"></article>
+        </section>
+
+        <section id="view-claim" hidden>
+          <button type="button" id="back-to-details" class="text-button">Back to item</button>
+          <div class="section-heading">
+            <h2>Claim item</h2>
+            <p class="lede">
+              Submit private evidence for <strong id="claim-item-name"></strong>. Other visitors will not see this.
+            </p>
+          </div>
+          <form id="claim-form" class="report-form" novalidate>
+            <p id="claim-error" class="form-error full" hidden></p>
+            <label>
+              Your name
+              <input type="text" name="claimantName" maxlength="80" required />
+            </label>
+            <label>
+              Contact
+              <input type="text" name="contact" maxlength="120" required />
+            </label>
+            <label class="full">
+              Evidence
+              <span class="field-hint">Private. Staff can review this later. Other visitors never see it.</span>
+              <textarea name="evidence" rows="4" maxlength="400" required></textarea>
+            </label>
+            <button type="submit" class="primary-button full">Submit claim</button>
+          </form>
+        </section>
+
+        <section id="view-report" hidden>
+          <div class="section-heading">
+            <h2>Report found item</h2>
+            <p class="lede">
+              Staff can save a draft first. Visitors will not see it until it is published.
+            </p>
+          </div>
+          <form id="report-form" class="report-form" novalidate>
+            <p id="form-error" class="form-error full" hidden></p>
+            <label>
+              Item name
+              <input type="text" name="name" maxlength="80" required />
+            </label>
+            <label>
+              Category
+              <select name="category" required>
+                <option value="">Choose a category</option>
+                <option value="Clothing">Clothing</option>
+                <option value="Cards">Cards</option>
+                <option value="Electronics">Electronics</option>
+                <option value="Bags">Bags</option>
+                <option value="Keys">Keys</option>
+                <option value="Other">Other</option>
+              </select>
+            </label>
+            <label>
+              Found location
+              <input type="text" name="foundLocation" maxlength="120" required />
+            </label>
+            <label>
+              Found date
+              <input type="date" name="foundDate" required />
+            </label>
+            <label class="full">
+              Public description
+              <textarea name="publicDescription" rows="4" maxlength="400" required></textarea>
+            </label>
+            <label class="full">
+              Private clue
+              <span class="field-hint">Staff only. Visitors never see this.</span>
+              <textarea name="privateClue" rows="3" maxlength="300" required></textarea>
+            </label>
+            <button type="submit" class="primary-button full">Save as draft</button>
+          </form>
+        </section>
+
+        <section id="view-my-claims" hidden>
+          <div class="section-heading">
+            <h2>My claims</h2>
+            <p class="lede">
+              Track whether each claim is still submitted, approved, or rejected. Evidence stays private.
+            </p>
+          </div>
+          <p id="my-claims-empty" class="empty-message" hidden></p>
+          <div id="my-claim-list" class="item-grid"></div>
+        </section>
+
+        <section id="view-review" hidden>
+          <div class="section-heading">
+            <h2>Review claims</h2>
+            <p class="lede">
+              Staff can see private evidence and must give a decisionReason before approving or rejecting.
+            </p>
+          </div>
+          <p id="review-empty" class="empty-message" hidden></p>
+          <div id="claim-list" class="item-grid"></div>
+        </section>
+
+        <section id="view-decision" hidden>
+          <button type="button" id="back-to-review" class="text-button">Back to claims</button>
+          <article id="claim-decision" class="details-card"></article>
+        </section>
+
+        <section id="view-log" hidden>
+          <div class="section-heading">
+            <h2>Activity log</h2>
+            <p class="lede">Staff-only record of visitor and staff actions.</p>
+          </div>
+          <p id="log-empty" class="empty-message" hidden></p>
+          <div id="log-list" class="log-list"></div>
+        </section>
+        <section id="view-archive" hidden>
+          <div class="section-heading">
+            <h2>Archive</h2>
+            <p class="lede">Staff-only records of archived claims, including related logs.</p>
+          </div>
+          <p id="archive-empty" class="empty-message" hidden></p>
+          <div id="archive-list" class="item-grid"></div>
+        </section>
+
+        <section id="view-archive-details" hidden>
+          <button type="button" id="back-to-archive" class="text-button">Back to archive</button>
+          <article id="archive-details" class="details-card"></article>
+        </section>
+      </main>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>
